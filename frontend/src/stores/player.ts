@@ -21,8 +21,8 @@ export const usePlayerStore = defineStore('player', () => {
 
     // Actions
     const addTrack = async (inputUrl: string) => {
-        // 1. Fetch metadata from your backend
-        const response = await fetch(`http://localhost:3000/api/info?url=${inputUrl}`);
+        // 1. Fetch metadata from your NEW Cloudflare backend
+        const response = await fetch(`https://music-bot-api.koncetkje.workers.dev/api/info?url=${inputUrl}`);
         const trackData = await response.json();
         
         // 2. Add to queue
@@ -38,8 +38,8 @@ export const usePlayerStore = defineStore('player', () => {
         if (!queue.value[index]) return;
         
         currentIndex.value = index;
-        // Point the audio source to your backend stream API
-        audioPlayer.src = `http://localhost:3000/api/stream?url=${queue.value[index].url}`;
+        // Point the audio source to your NEW Cloudflare stream API
+        audioPlayer.src = `https://music-bot-api.koncetkje.workers.dev/api/stream?url=${queue.value[index].url}`;
         audioPlayer.play();
         isPlaying.value = true;
     };
