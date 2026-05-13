@@ -12,25 +12,25 @@ export const usePlayerStore = defineStore('player', () => {
     const queue = ref<Track[]>([]);
     const currentIndex = ref(0);
     const isPlaying = ref(false);
+    const isLoading = ref(false); // ✨ Added loading state
     
-    // The native HTML5 Audio element
     const audioPlayer = new Audio();
 
-    // Getters
     const currentTrack = computed(() => queue.value[currentIndex.value]);
 
-    // Actions
     const addTrack = async (inputUrl: string) => {
-        // 1. Fetch metadata from your NEW Cloudflare backend
-        const response = await fetch(`https://music-bot-api.koncetkje.workers.dev/api/info?url=${inputUrl}`);
-        const trackData = await response.json();
-        
-        // 2. Add to queue
-        queue.value.push(trackData);
+        isLoading.value = true; // Start loading
+        try {
+            const response = await fetch(`https://music-bot-api.koncetkje.workers.dev/api/info?url=${inputUrl}`);
+            const trackData = await response.json();
+            
+            queue.value.push(trackData);
 
-        // 3. If nothing is playing, start playing immediately
-        if (queue.value.length === 1) {
-            playTrack(0);
+            if (queue.value.length === 1) {
+                playTrack(0);
+            }
+        } finally {
+            isLoading.value = false; // Stop loading even if it errors
         }
     };
 
@@ -38,7 +38,6 @@ export const usePlayerStore = defineStore('player', () => {
         if (!queue.value[index]) return;
         
         currentIndex.value = index;
-        // Point the audio source to your NEW Cloudflare stream API
         audioPlayer.src = `https://music-bot-api.koncetkje.workers.dev/api/stream?url=${queue.value[index].url}`;
         audioPlayer.play();
         isPlaying.value = true;
@@ -48,14 +47,40 @@ export const usePlayerStore = defineStore('player', () => {
         if (currentIndex.value < queue.value.length - 1) {
             playTrack(currentIndex.value + 1);
         } else {
-            isPlaying.value = false; // Queue finished
+            isPlaying.value = false;
         }
     };
 
-    // Auto-play next song when current finishes (The Bot Behavior)
+    // ✨ Added toggle for the Play/Pause button
+    const togglePlayPause = () => {
+        if (isPlaying.value) {
+            audioPlayer.pause();
+            isPlaying.value = false;
+        } else {
+            audioPlayer.play();
+            isPlaying.value = true;
+        }
+    };
+
+    const removeTrack = (index: number) => {
+        queue.value.splice(index, 1);
+    };
+
     audioPlayer.onended = () => {
         nextTrack();
     };
 
-    return { queue, currentTrack, isPlaying, addTrack, playTrack, nextTrack };
+    // ✨ Make sure we export EVERYTHING the UI needs
+    return { 
+        queue, 
+        currentIndex, 
+        currentTrack, 
+        isPlaying, 
+        isLoading, 
+        addTrack, 
+        playTrack, 
+        nextTrack, 
+        removeTrack, 
+        togglePlayPause 
+    };
 });

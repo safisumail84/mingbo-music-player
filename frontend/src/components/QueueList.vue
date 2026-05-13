@@ -42,7 +42,7 @@
         <button
           class="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
           type="button"
-          @click="store.removeAt(idx)"
+          @click="store.removeTrack(idx)" 
         >
           Remove
         </button>
@@ -56,4 +56,3 @@ import { usePlayerStore } from '../stores/player';
 
 const store = usePlayerStore();
 </script>
-
