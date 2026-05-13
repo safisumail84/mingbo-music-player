@@ -12,27 +12,38 @@ export const usePlayerStore = defineStore('player', () => {
     const queue = ref<Track[]>([]);
     const currentIndex = ref(0);
     const isPlaying = ref(false);
-    const isLoading = ref(false); // ✨ Added loading state
+    const isLoading = ref(false);
     
     const audioPlayer = new Audio();
 
     const currentTrack = computed(() => queue.value[currentIndex.value]);
 
+    // 👇 THIS IS THE FUNCTION WE FIXED 👇
     const addTrack = async (inputUrl: string) => {
-        isLoading.value = true; // Start loading
+        isLoading.value = true; 
         try {
             const response = await fetch(`https://music-bot-api.koncetkje.workers.dev/api/info?url=${inputUrl}`);
             const trackData = await response.json();
             
+            // ✨ THE FIX: Check if the backend sent us an error before adding!
+            if (trackData.error) {
+                alert("API Error: " + trackData.error);
+                return; // Stop right here, do NOT add to queue
+            }
+
             queue.value.push(trackData);
 
             if (queue.value.length === 1) {
                 playTrack(0);
             }
+        } catch (err) {
+            // Catch complete network failures too
+            alert("Network error: Could not reach the API.");
         } finally {
-            isLoading.value = false; // Stop loading even if it errors
+            isLoading.value = false; 
         }
     };
+    // 👆 END OF FIX 👆
 
     const playTrack = (index: number) => {
         if (!queue.value[index]) return;
@@ -51,7 +62,6 @@ export const usePlayerStore = defineStore('player', () => {
         }
     };
 
-    // ✨ Added toggle for the Play/Pause button
     const togglePlayPause = () => {
         if (isPlaying.value) {
             audioPlayer.pause();
@@ -70,7 +80,6 @@ export const usePlayerStore = defineStore('player', () => {
         nextTrack();
     };
 
-    // ✨ Make sure we export EVERYTHING the UI needs
     return { 
         queue, 
         currentIndex, 
